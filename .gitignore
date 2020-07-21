@@ -1,2 +1,5 @@
 #Byte code
 __pycache__/
+
+#MacOS
+.DS_Store
