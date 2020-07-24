@@ -61,15 +61,15 @@ def transition_model(corpus, page, damping_factor):
 
     if page is None or len(corpus.get(page)) == 0:
         #probabilities are all the same
-        probability = 1 / len(corpus.keys())
+        probability = float(1) / len(corpus.keys())
         for key in corpus.keys():
             probability_distribution.update({key : probability})
     
     else:
         #probabilities are weighted
-        probability = (1 - damping_factor) / len(corpus.keys())
+        probability = float(1 - damping_factor) / len(corpus.keys())
         linked_pages = corpus.get(page)
-        linked_probability = damping_factor / len(linked_pages)
+        linked_probability = float(damping_factor) / len(linked_pages)
         for key in corpus.keys():
             if linked_pages.issuperset({key}):
                 probability_distribution.update({key : probability + linked_probability})
@@ -88,11 +88,11 @@ def sample_pagerank(corpus, damping_factor, n):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    page_rank = dict()
+    page_ranks = dict()
 
     #initialize all probabilities
     for key in corpus.keys():
-        page_rank.update({key : (1 - damping_factor) / len(corpus.keys())})
+        page_ranks.update({key : float(1 - damping_factor) / len(corpus.keys())})
 
     selected_page = None
 
@@ -101,10 +101,14 @@ def sample_pagerank(corpus, damping_factor, n):
         model = transition_model(corpus, selected_page, damping_factor)
         selected_key = sample_distribution(model)
 
-        #update the chosen page to the page_rank
-        page_rank[selected_key] += damping_factor / n
+        #update the chosen page to the page_ranks
+        page_ranks[selected_key] += float(damping_factor) / n
 
-    return page_rank
+    sum = 0
+    for key in page_ranks.keys(): sum += page_ranks[key] 
+    print("Probability adds up to " + str(sum))
+
+    return page_ranks
 
 
 def sample_distribution(probability_distribution):
@@ -123,10 +127,6 @@ def sample_distribution(probability_distribution):
     for key in keys:
         random_distribution.append(cumulative_probability + probability_distribution[key])
         cumulative_probability += probability_distribution[key]
-
-    if cumulative_probability <= 0.999 or cumulative_probability >= 1.001:
-        print("Probability does not accumalate to 1")
-        raise
 
     del cumulative_probability
 
@@ -149,15 +149,34 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
+    #NUMERS DO NOT MATCH, ALSO DO NOT ADD UP TO ONE
+    raise NotImplementedError
+
     #initalize page ranks
     page_ranks = dict()
     for key in corpus.keys():
-        page_ranks.update({key : 1 / len(corpus.keys())})
+        page_ranks.update({key : float(1) / len(corpus.keys())})
 
     while True:
         old_page_ranks = page_ranks.copy()
 
         for key in corpus.keys():
+            page_ranks_value = float(1 - damping_factor) / len(corpus.keys())
+
+            for other_key in corpus.keys():
+                #Don't count itself
+                if key == other_key:
+                    continue
+
+                if len(corpus[other_key]) == 0:
+                    page_ranks_value += float(damping_factor) * page_ranks[other_key] / len(corpus.keys())
+
+                elif corpus[other_key].issuperset({key}):
+                    page_ranks_value += float(damping_factor) * page_ranks[other_key] / len(corpus[other_key])
+
+            page_ranks[key] = page_ranks_value
+
+        """for key in corpus.keys():
             #determine what keys are linked to this key
             linked_keys = None
             if len(corpus[key]) == 0:
@@ -171,13 +190,13 @@ def iterate_pagerank(corpus, damping_factor):
                     linked_keys.append(value)
 
             #calculate new rank value for this key
-            page_rank_value = (1 - damping_factor) / len(corpus.keys())
+            page_ranks_value = (1 - damping_factor) / len(corpus.keys())
             len_linked_keys = len(linked_keys)
             
             for linked_key in linked_keys:
-                page_rank_value += damping_factor * page_ranks[linked_key] / len_linked_keys
+                page_ranks_value += damping_factor * page_ranks[linked_key] / len_linked_keys
 
-            page_ranks.update({key : page_rank_value})
+            page_ranks.update({key : page_ranks_value})"""
 
         #break out of while loop if no page changed by > 0.001
         break_loop = True
@@ -190,6 +209,10 @@ def iterate_pagerank(corpus, damping_factor):
 
         if break_loop:
             break
+
+    sum = 0
+    for key in page_ranks.keys(): sum += page_ranks[key] 
+    print("Probability adds up to " + str(sum))
 
     return page_ranks
 
