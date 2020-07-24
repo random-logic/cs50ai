@@ -273,23 +273,32 @@ def update(probabilities, one_gene, two_genes, have_trait, p):
     Which value for each distribution is updated depends on whether
     the person is in `have_gene` and `have_trait`, respectively.
     """
-    raise NotImplementedError
-
+    for key in probabilities.keys():
+        if two_genes.issuperset({key}):
+            probabilities[key]["gene"][2] += p
+        elif one_gene.issuperset({key}):
+            probabilities[key]["gene"][1] += p
+        else:
+            probabilities[key]["gene"][0] += p
+        
+        probabilities[key]["trait"][have_trait.issuperset({key})] += p
 
 def normalize(probabilities):
     """
     Update `probabilities` such that each probability distribution
     is normalized (i.e., sums to 1, with relative proportions the same).
     """
-    raise NotImplementedError
-
-    probability_sum = 0
-
     for key in probabilities.keys():
-        probabilitiy_sum += probabilities[key]
+        probability_sum = 0
+        for i in range(3):
+            probability_sum += probabilities[key]["gene"][i]
+        for i in range(3):
+            probabilities[key]["gene"][i] /= probability_sum
 
-    for key in probabilities.keys():
-        probabilities[key] /= probabilitiy_sum
+        probability_sum = probabilities[key]["trait"][True]
+        probability_sum += probabilities[key]["trait"][False]
+        probabilities[key]["trait"][True] /= probability_sum
+        probabilities[key]["trait"][False] /= probability_sum
 
 
 if __name__ == "__main__":
