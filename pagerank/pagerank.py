@@ -94,8 +94,10 @@ def sample_pagerank(corpus, damping_factor, n):
     for key in corpus.keys():
         page_ranks.update({key : float(1 - damping_factor) / len(corpus.keys())})
 
+    #All of the pages should have the same probability on the first sample
     selected_page = None
 
+    #Sample n number of times
     for i in range(n):
         #surfer chooses random page based off probabilities
         model = transition_model(corpus, selected_page, damping_factor)
@@ -103,10 +105,6 @@ def sample_pagerank(corpus, damping_factor, n):
 
         #update the chosen page to the page_ranks
         page_ranks[selected_key] += float(damping_factor) / n
-
-    sum = 0
-    for key in page_ranks.keys(): sum += page_ranks[key] 
-    print("Probability adds up to " + str(sum))
 
     return page_ranks
 
@@ -121,17 +119,22 @@ def sample_distribution(probability_distribution):
         
     Return a key from the dictionary
     """
+    #Get keys
+    keys = probability_distribution.keys()
+
+    #Create a list of numbers that will be used to determine which key to return
     random_distribution = []
     cumulative_probability = 0
-    keys = probability_distribution.keys()
     for key in keys:
         random_distribution.append(cumulative_probability + probability_distribution[key])
         cumulative_probability += probability_distribution[key]
 
     del cumulative_probability
 
+    #Generate random number where 0 <= random number < 1
     random_number = random.random()
 
+    #Return the key based off of the random number
     i = 0
     for key in keys:
         if random_number < random_distribution[i]:
@@ -149,54 +152,27 @@ def iterate_pagerank(corpus, damping_factor):
     their estimated PageRank value (a value between 0 and 1). All
     PageRank values should sum to 1.
     """
-    #NUMERS DO NOT MATCH, ALSO DO NOT ADD UP TO ONE
-    raise NotImplementedError
-
     #initalize page ranks
     page_ranks = dict()
     for key in corpus.keys():
         page_ranks.update({key : float(1) / len(corpus.keys())})
 
     while True:
+        #Make a copy of old values to use in comparison later
         old_page_ranks = page_ranks.copy()
 
+        #Calculate page rank
         for key in corpus.keys():
             page_ranks_value = float(1 - damping_factor) / len(corpus.keys())
 
             for other_key in corpus.keys():
-                #Don't count itself
-                if key == other_key:
-                    continue
-
                 if len(corpus[other_key]) == 0:
-                    page_ranks_value += float(damping_factor) * page_ranks[other_key] / len(corpus.keys())
+                    page_ranks_value += float(damping_factor) * old_page_ranks[other_key] / len(corpus.keys())
 
                 elif corpus[other_key].issuperset({key}):
-                    page_ranks_value += float(damping_factor) * page_ranks[other_key] / len(corpus[other_key])
+                    page_ranks_value += float(damping_factor) * old_page_ranks[other_key] / len(corpus[other_key])
 
             page_ranks[key] = page_ranks_value
-
-        """for key in corpus.keys():
-            #determine what keys are linked to this key
-            linked_keys = None
-            if len(corpus[key]) == 0:
-                linked_keys = []
-                for key in page_ranks.keys():
-                    linked_keys.append(key)
-            else:
-                values = corpus[key]
-                linked_keys = []
-                for value in values:
-                    linked_keys.append(value)
-
-            #calculate new rank value for this key
-            page_ranks_value = (1 - damping_factor) / len(corpus.keys())
-            len_linked_keys = len(linked_keys)
-            
-            for linked_key in linked_keys:
-                page_ranks_value += damping_factor * page_ranks[linked_key] / len_linked_keys
-
-            page_ranks.update({key : page_ranks_value})"""
 
         #break out of while loop if no page changed by > 0.001
         break_loop = True
@@ -209,10 +185,6 @@ def iterate_pagerank(corpus, damping_factor):
 
         if break_loop:
             break
-
-    sum = 0
-    for key in page_ranks.keys(): sum += page_ranks[key] 
-    print("Probability adds up to " + str(sum))
 
     return page_ranks
 
